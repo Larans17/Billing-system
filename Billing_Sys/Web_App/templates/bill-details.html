@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+    
+{% block content %}
+<div class="container-lg mt-5">
+    <div class="card text-dark bg-light">
+        <div class="card-header">
+            <h1>Billing Details</h1>
+        </div>
+        <div class="card-body">
+            {% if email != None %}
+            <div class="row my-3">
+                <label class="col-sm-2 col-form-label fw-bold">Customer Email</label>
+                <div class="col-sm-4">
+                    <input type="email" class="form-control" value="{{email}}" readonly>
+                </div>
+            </div>
+            {% endif %}
+            <div class="row my-5">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Purchase ID</th>
+                            <th>Date</th>
+                            <th>Tax</th>
+                            <th>Total</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if bill_data|length > 0 %}
+                            {% for data in bill_data %}
+                                <tr>
+                                    <td>{{ data.id }}</td>
+                                    <td>{{ data.created_at }}</td>
+                                    <td>₹ {{ data.tax_amount }}</td>
+                                    <td>₹ {{ data.total_amount }}</td>
+                                    <td>
+                                        <button class="btn btn-warning" onclick="getBillItem('{{ data.id }}')">View Bill</button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">Record not found</td>
+                            </tr>
+                        {% endif %}
+
+                    </tbody>
+                </table>
+                </table>
+            </div>
+            
+            <hr>
+            <div class="row my-5">
+                <div id="billDetailDiv">
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+    <script>
+
+    function getBillItem(id){
+        $.ajax({
+            url: `/api/get-bill-item/?id=${id}`,
+            method: 'GET',
+            contentType: 'application/json',
+            success: function(response) {
+                console.log(response,"=======================")
+                displayBillPreview(response);
+            },
+            error: function(xhr) {
+                alert('Error generating bill: ' + xhr.responseJSON.error);
+            }
+        });
+    };
+
+    // Display bill preview
+    function displayBillPreview(bill) {
+        let html = `
+            <div class="card">
+                <div class="card-body">
+                <label class="form-label fw-bold">Purchase Item</label>
+                <hr>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Unit Price</th>
+                                <th>Quantity</th>
+                                <th>Taxable Amount</th>
+                                <th>Tax % </th>
+                                <th>Tax Amount</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+        bill.forEach(item => {
+            //const product = products.find(p => p.id === item.product);
+            html += `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.price}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.unit_price}</td>
+                    <td>${item.tax} % </td>
+                    <td>₹${item.tax_amount}</td>
+                    <td>₹${item.total_amount}</td>
+                </tr>
+            `;
+        });
+
+        let data = bill[0]
+        html += `
+                </tbody>
+                </table>
+
+                <div class="row my-5">
+                <div class="col-sm-8">
+                <label class="form-label fw-bold">Balance Denomination: </label>`
+        data.denominations.forEach(denomi => {
+        html += `
+                <div>
+                 <label class="form-label fw-bold text-end">${denomi.value}: ${denomi.count}</label>
+                 </div>
+                `
+        });
+        html += `</div>
+                <div class="col-sm-4 d-flex justify-content-between">
+                    <div>
+                       <label class="form-label fw-bold">Taxable Amount : </label>
+                       <label class="form-label fw-bold">Tax Amount : </label>
+                       <label class="form-label fw-bold">Net Amount : </label>
+                       <label class="form-label fw-bold">Round off : </label>
+                       <label class="form-label fw-bold">Balance payable to the customer : </label>
+                    </div>
+                    <div class="text-end">
+                        <label class="form-label fw-bold">${data.taxable_amount}</label>
+                       <label class="form-label fw-bold">${data.pur_tax_amount}</label>
+                       <label class="form-label fw-bold">${data.total_amount}</label>
+                       <label class="form-label fw-bold">${data.total_amount}</label>
+                       <label class="form-label fw-bold">${data.balance_amount}</label>
+                    </div>
+                </div>
+                </div>
+                    `
+            $("#billDetailDiv").html(html);
+
+    $("html, body").animate({ scrollTop: $(document).height() }, 1000);
+    }
+    </script>
+{% endblock %}

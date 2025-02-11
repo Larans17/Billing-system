@@ -1,0 +1,398 @@
+{% extends 'base.html' %}
+    
+    {% block content %}
+    <div class="container-lg mt-5">
+        <div class="card text-dark bg-light">
+            <div class="card-header">
+                <h1>Billing System</h1>
+            </div>
+            <div class="card-body">
+                <form id="billingForm" onsubmit="submitForm(event)">
+                    {% csrf_token %}
+                    <div class="row my-3">
+                        <label class="col-sm-2 col-form-label fw-bold">Customer Email</label>
+                        <div class="col-sm-8">
+                            <input type="email" class="form-control" name="customer_email" id="customer_email" placeholder="email@example.com" required>
+                        </div>
+                    </div>
+  
+                    <div class="row mb-3">
+                        <div class="col-sm-6 d-flex justify-content-between">
+                            <label class="col-form-label mt-3 fw-bold">Billing Section</label>
+                            <button class="btn btn-info my-3" type="button" onclick="addProduct()">Add Product</button>
+                        </div>
+                        <div class="col-sm-8">
+                            <div id="product_section"></div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 d-none" id="bill_sum_div">
+                        <div class="col-sm-6 mb-3 d-flex justify-content-end">
+                        <div class="d-flex justify-content-end">
+                            <div>
+                                <button class="btn btn-dark mx-3" type="button" onclick="sumBillValues()">Sum Bill</button>
+                            </div>
+                            <div>
+                                <input type="text" class="form-control" id="txt_total_value" readonly >
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+  
+                    <hr>
+  
+                    <!-- Denomination Section -->
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label fw-bold">Denominations</label>
+                        <div class="col-sm-6">
+                            <div class="row mb-2">
+                                <div class="col-1">
+                                    <label class="form-label fw-bold">500</label>
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control" name="denom_500" placeholder="Count">
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-1">
+                                    <label class="form-label fw-bold">200</label>
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control" name="denom_200" placeholder="Count">
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-1">
+                                    <label class="form-label fw-bold">100</label>
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control" name="denom_100" placeholder="Count">
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-1">
+                                    <label class="form-label fw-bold">50</label>
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control" name="denom_50" placeholder="Count">
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-1">
+                                    <label class="form-label fw-bold">20</label>
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control" name="denom_20" placeholder="Count">
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-1">
+                                    <label class="form-label fw-bold">10</label>
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control" name="denom_10" placeholder="Count">
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-1">
+                                    <label class="form-label fw-bold">5</label>
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control" name="denom_5" placeholder="Count">
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-1">
+                                    <label class="form-label fw-bold">2</label>
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control" name="denom_2" placeholder="Count">
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-1">
+                                    <label class="form-label fw-bold">1</label>
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control" name="denom_1" placeholder="Count">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+  
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label fw-bold">Cash paid by customer</label>
+                        <div class="col-sm-4">
+                            <input type="number" class="form-control" id="paid_amount" placeholder="Amount" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 d-flex justify-content-end">
+                        <input type="hidden" id="paid_amount" >
+                        <button type="button" class="btn btn-danger mx-2">Cancel</button>
+                        <button class="btn btn-success" type="submit">Generate Bill</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+    {% block extra_js %}
+    <script>
+
+        let productList = [];
+        let rowIdCounter = 0; // Initialize row ID counter
+        let slt_product_price = 0;
+        let slt_product_tax = 0;
+
+    
+        async function fetchProducts() {
+            if (productList.length === 0) { // Fetch only once
+                try {
+                    let response = await fetch('/api/get-products-list/');
+                    productList = await response.json();
+                } catch (error) {
+                    console.error("Error fetching products:", error);
+                }
+            }
+        }
+    
+
+        function addProduct() {
+            const productSection = document.getElementById("product_section");
+            const rowId = `row-${rowIdCounter++}`; // Generate unique row ID
+            const productDiv = document.createElement("div");
+            productDiv.classList.add("row", "mb-2");
+            productDiv.id = rowId; // Assign unique ID
+        
+            // Product Dropdown
+            let productDropdown = document.createElement("select");
+            productDropdown.classList.add("form-control");
+            productDropdown.name = "product_id[]";
+            productDropdown.dataset.rowId = rowId; // Store row ID in dropdown
+            productDropdown.onchange = function () {
+                updateProductSelection(this);
+            };
+        
+            let defaultOption = document.createElement("option");
+            defaultOption.text = "Select a product";
+            defaultOption.value = "";
+            productDropdown.appendChild(defaultOption);
+        
+            productList.forEach(product => {
+                let option = document.createElement("option");
+                option.value = product.product_id; // Ensure this is properly assigned
+                option.textContent = `${product.product_id} - ₹${product.price}  (stock - ${product.available_stocks})`;
+                option.setAttribute("data-price", product.price);
+                option.setAttribute("data-tax", product.tax_percentage);
+                productDropdown.appendChild(option);
+            });
+        
+            // Quantity Input
+            let quantityInput = document.createElement("input");
+            quantityInput.type = "number";
+            quantityInput.classList.add("form-control");
+            quantityInput.name = "product_quantity[]";
+            quantityInput.placeholder = "Quantity";
+            quantityInput.required = true;
+            quantityInput.min = 1;
+            quantityInput.dataset.rowId = rowId; // Store row ID in quantity input
+            quantityInput.addEventListener("input", function () {
+                let result = taxCalculate(this);
+                quantityInput.setAttribute("data-taxamt", result.taxAmt);
+                quantityInput.setAttribute("data-qtyamt", result.qtyAmt);
+            });
+        
+            // Remove Button
+            let removeBtn = document.createElement("button");
+            removeBtn.type = "button";
+            removeBtn.classList.add("btn", "btn-danger");
+            removeBtn.textContent = "X";
+            removeBtn.onclick = function () {
+                removeProduct(rowId);
+            };
+        
+            // Append elements to productDiv
+            let productCol = document.createElement("div");
+            productCol.classList.add("col-sm-6");
+            productCol.appendChild(productDropdown);
+        
+            let quantityCol = document.createElement("div");
+            quantityCol.classList.add("col-sm-3");
+            quantityCol.appendChild(quantityInput);
+        
+            let buttonCol = document.createElement("div");
+            buttonCol.classList.add("col-sm-2");
+            buttonCol.appendChild(removeBtn);
+        
+            productDiv.appendChild(productCol);
+            productDiv.appendChild(quantityCol);
+            productDiv.appendChild(buttonCol);
+        
+            productSection.appendChild(productDiv);
+        }
+        
+        function updateProductSelection(selectElement) {
+            const rowId = selectElement.dataset.rowId;
+            console.log(`Row ${rowId}: Selected Product ID = ${selectElement.value}`);
+
+            // Get the selected option
+            const selectedOption = selectElement.options[selectElement.selectedIndex]; 
+            // Retrieve the data-price attribute from the selected option
+           slt_product_price = selectedOption.getAttribute("data-price"); 
+           slt_product_tax = selectedOption.getAttribute("data-tax"); 
+        }
+        
+        function removeProduct(rowId) {
+            document.getElementById(rowId)?.remove();
+        }
+        
+        function getSelectedProducts() {
+            const productRows = document.querySelectorAll("#product_section .row");
+            let selectedProducts = [];
+    
+            productRows.forEach(row => {
+                let productDropdown = row.querySelector("select[name='product_id[]']");
+                let quantityInput = row.querySelector("input[name='product_quantity[]']");
+    
+                if (productDropdown.value && quantityInput.value) {
+                    selectedProducts.push({
+                        product_id: productDropdown.value,
+                        quantity: parseInt(quantityInput.value),
+                        tax_amt: parseFloat(quantityInput.getAttribute('data-taxamt')),
+                        taxable_amt: parseFloat(quantityInput.getAttribute('data-qtyamt')),
+                    });
+                }
+            });
+    
+            return selectedProducts;
+        }
+
+
+        function taxCalculate(Element) {
+            let sumDiv = $("#bill_sum_div");
+            sumDiv.removeClass('d-none');
+        
+            console.log(`Selected = ${slt_product_price}`);
+            console.log(`Selected Product tax = ${slt_product_tax}`);
+        
+            let ttl_qty_amt = slt_product_price * Element.value;
+            let tax_amt = ttl_qty_amt * slt_product_tax / 100;
+        
+            console.log(ttl_qty_amt, tax_amt);
+        
+            return {
+                taxAmt: tax_amt.toFixed(2),
+                qtyAmt: ttl_qty_amt.toFixed(2)
+            }; // Return an object
+        }
+        
+
+        function productSum(taxable_amt,tax_amt){
+
+        } 
+
+
+        function sumBillValues() {
+            let ttlTaxableAmt = 0;
+            let ttlTaxAmt = 0;
+        
+            $(" #product_section .row .col-sm-3").each(function () {
+                let taxValue = $(this).find("input").attr('data-taxamt'); // Get input value
+                let qtyValue = $(this).find("input").attr('data-qtyamt'); // Get input value
+                ttlTaxableAmt += parseFloat(qtyValue) || 0;
+                ttlTaxAmt += parseFloat(taxValue) || 0;
+            });
+            //console.log('11111111111',ttlTaxableAmt);
+            let total = ttlTaxAmt + ttlTaxableAmt;
+            let billInput = $("#txt_total_value")
+            billInput.attr('taxableAmt',ttlTaxableAmt.toFixed(2));
+            billInput.attr("taxAmt",ttlTaxAmt.toFixed(2));
+            billInput.val(total.toFixed(2));
+        }
+
+        function getDenominationValues() {
+            let denominations = {};
+        
+            $(".col-sm-6 .row").each(function () {
+                let label = $(this).find("label").text().trim(); // Get denomination value
+                let inputValue = $(this).find("input").val(); // Get input value
+                
+                if (inputValue) {
+                    denominations[label] = parseInt(inputValue); // Convert input to integer
+                }
+            });
+            return [denominations];
+        }
+        
+        function getCsrfToken() {
+            return document.querySelector("input[name='csrfmiddlewaretoken']").value;
+        }
+        
+        function submitForm(event) {
+            event.preventDefault(); // Prevent default form submission
+        
+            let csrfToken = getCsrfToken(); // Get CSRF token from the hidden input field
+        
+            let email = document.getElementById("customer_email").value;
+            let paidAmount = document.getElementById("paid_amount").value;
+            let billElement = document.getElementById("txt_total_value");
+            
+        
+            if (!email.includes("@")) {
+                alert("Enter a valid email.");
+                return;
+            }
+        
+            if (paidAmount <= 0) {
+                alert("Enter a valid amount.");
+                return;
+            }
+        
+            let selectedProducts = getSelectedProducts();
+            if (selectedProducts.length === 0) {
+                alert("Please add at least one product.");
+                return;
+            }
+        
+            let denominations = getDenominationValues(); // Call function to get denominations
+        
+            let formData = {
+                customer_email: email,
+                paid_amount: paidAmount,
+                bill_amount: billElement ? billElement.value : 0, 
+                taxable_amount: billElement ? parseFloat(billElement.getAttribute('taxableAmt')) || 0 : 0,
+                tax_amount: billElement ? parseFloat(billElement.getAttribute('taxAmt')) || 0 : 0,
+                items: JSON.stringify(selectedProducts),
+                denominations: JSON.stringify(denominations)
+            };
+        
+            $.ajax({
+                url: "/billing/",
+                type: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken  // Add CSRF token in headers
+                },
+                data: formData,
+                success: function (response) {
+                    debugger
+                    console.log(response,"==========================")
+                    alert("The bill has been generated successfully and an email has been sent to the customer.!");
+
+                    window.location.href = response.redirect_url; // Redirect to bill details page
+                },
+                error: function (xhr) {
+                    alert("Error generating bill. Try again!");
+                    console.error(xhr.responseText);
+                }
+            });
+        }
+        
+        
+    
+        document.addEventListener("DOMContentLoaded", fetchProducts);
+    </script>
+    
+
+    {% endblock %}

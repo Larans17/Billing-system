@@ -1,0 +1,122 @@
+<body>
+  <div class="container-lg mt-5">
+      <div class="card text-dark bg-light">
+          <div class="card-header">
+              <h1>Billing System</h1>
+          </div>
+          <div class="card-body">
+              <form id="billingForm" onsubmit="submitForm(event)">
+                  <div class="row my-3">
+                      <label class="col-sm-2 col-form-label fw-bold">Customer Email</label>
+                      <div class="col-sm-8">
+                          <input type="email" class="form-control" id="customer_email" placeholder="email@example.com" required>
+                      </div>
+                  </div>
+
+                  <div class="row mb-3">
+                      <div class="col-sm-6 d-flex justify-content-between">
+                          <label class="col-form-label mt-3 fw-bold">Billing Section</label>
+                          <button class="btn btn-info my-3" type="button" onclick="addProduct()">Add Product</button>
+                      </div>
+                      <div class="col-sm-8">
+                          <div id="product_section"></div>
+                      </div>
+                  </div>
+
+                  <hr>
+
+                  <!-- Denomination Section -->
+                  <div class="row mb-3">
+                      <label class="col-sm-3 col-form-label fw-bold">Denominations</label>
+                      <div class="col-sm-6">
+                          <div class="row mb-2">
+                              <div class="col-1">
+                                  <label class="form-label fw-bold">500</label>
+                              </div>
+                              <div class="col-6">
+                                  <input type="number" class="form-control" name="denom_500" placeholder="Count">
+                              </div>
+                          </div>
+                          <div class="row mb-2">
+                              <div class="col-1">
+                                  <label class="form-label fw-bold">200</label>
+                              </div>
+                              <div class="col-6">
+                                  <input type="number" class="form-control" name="denom_200" placeholder="Count">
+                              </div>
+                          </div>
+                          <div class="row mb-2">
+                              <div class="col-1">
+                                  <label class="form-label fw-bold">100</label>
+                              </div>
+                              <div class="col-6">
+                                  <input type="number" class="form-control" name="denom_100" placeholder="Count">
+                              </div>
+                          </div>
+                          <div class="row mb-2">
+                              <div class="col-1">
+                                  <label class="form-label fw-bold">50</label>
+                              </div>
+                              <div class="col-6">
+                                  <input type="number" class="form-control" name="denom_50" placeholder="Count">
+                              </div>
+                          </div>
+                          <div class="row mb-2">
+                              <div class="col-1">
+                                  <label class="form-label fw-bold">20</label>
+                              </div>
+                              <div class="col-6">
+                                  <input type="number" class="form-control" name="denom_20" placeholder="Count">
+                              </div>
+                          </div>
+                          <div class="row mb-2">
+                              <div class="col-1">
+                                  <label class="form-label fw-bold">10</label>
+                              </div>
+                              <div class="col-6">
+                                  <input type="number" class="form-control" name="denom_10" placeholder="Count">
+                              </div>
+                          </div>
+                          <div class="row mb-2">
+                              <div class="col-1">
+                                  <label class="form-label fw-bold">5</label>
+                              </div>
+                              <div class="col-6">
+                                  <input type="number" class="form-control" name="denom_5" placeholder="Count">
+                              </div>
+                          </div>
+                          <div class="row mb-2">
+                              <div class="col-1">
+                                  <label class="form-label fw-bold">2</label>
+                              </div>
+                              <div class="col-6">
+                                  <input type="number" class="form-control" name="denom_2" placeholder="Count">
+                              </div>
+                          </div>
+                          <div class="row mb-2">
+                              <div class="col-1">
+                                  <label class="form-label fw-bold">1</label>
+                              </div>
+                              <div class="col-6">
+                                  <input type="number" class="form-control" name="denom_1" placeholder="Count">
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="row mb-3">
+                      <label class="col-sm-3 col-form-label fw-bold">Cash paid by customer</label>
+                      <div class="col-sm-4">
+                          <input type="number" class="form-control" id="paid_amount" placeholder="Amount" required>
+                      </div>
+                  </div>
+
+                  <div class="mb-3 d-flex justify-content-end">
+                      <button type="button" class="btn btn-danger mx-2">Cancel</button>
+                      <button class="btn btn-success" type="submit">Generate Bill</button>
+                  </div>
+              </form>
+          </div>
+      </div>
+  </div>
+</body>
