@@ -1,2 +1,3 @@
 venv/
 	.vscode/Billing_Sys/.env
+.env
